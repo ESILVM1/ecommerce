@@ -1,8 +1,15 @@
-from django.urls import path
-from . import views  # Import de tes vues
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from users.views import UserViewSet, UserProfileViewSet
 
-# La variable DOIT s'appeler urlpatterns et DOIT être une liste []
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'profiles', UserProfileViewSet, basename='profile')
+
+# URL routing configuration for users app
+# DefaultRouter automatically generates CRUD endpoints for registered ViewSets
+# Plus custom actions defined in ViewSets (register, login, logout, me, etc.)
+
 urlpatterns = [
-    # Exemple de route :
-    # path('produits/', views.product_list, name='product-list'),
+    path('', include(router.urls)),
 ]
