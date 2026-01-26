@@ -10,6 +10,7 @@ class TimeStampedModel(models.Model):
 
 from django.db import models
 from core.models import TimeStampedModel
+from users.models import CustomUser
 
 class Product(TimeStampedModel):
     product_id = models.IntegerField(unique=True)
