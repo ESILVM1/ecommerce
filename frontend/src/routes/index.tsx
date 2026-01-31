@@ -10,6 +10,7 @@ import ProfilePage from '../features/auth/pages/ProfilePage';
 import SettingsPage from '../features/auth/pages/SettingsPage';
 import ShopPage from '../features/shop/pages/ShopPage';
 import ProductPage from '../features/shop/pages/ProductPage';
+import CartPage from '../features/cart/pages/CartPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: 'shop/:id',
         element: <ProductPage />,
+      },
+      {
+        path: 'cart',
+        element: <CartPage />,
       },
       {
         path: 'profile',
