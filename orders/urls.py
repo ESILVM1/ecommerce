@@ -1,8 +1,15 @@
-from django.urls import path
-from . import views  # Import de tes vues
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import OrderViewSet, OrderItemViewSet
 
-# La variable DOIT s'appeler urlpatterns et DOIT être une liste []
+# URL routing configuration for orders app
+# DefaultRouter automatically generates CRUD endpoints for registered ViewSets
+# Plus custom actions defined in ViewSets (my_orders, cancel_order, mark_as_shipped, confirm_delivery)
+
+router = DefaultRouter()
+router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'order-items', OrderItemViewSet, basename='order-item')
+
 urlpatterns = [
-    # Exemple de route :
-    # path('produits/', views.product_list, name='product-list'),
+    path('', include(router.urls)),
 ]
