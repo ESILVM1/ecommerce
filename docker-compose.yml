@@ -37,6 +37,17 @@ services:
       - "8080:8080"
     depends_on:
       - db
+  stripe:
+    image: stripe/stripe-cli
+    container_name: stripe_listener
+    # "web" est le nom de ton service Django. 
+    # Docker permet aux conteneurs de se parler via leur nom.
+    command: listen --forward-to http://web:8000/payment/webhook/
+    environment:
+      # Il a besoin de ta clé secrète pour s'authentifier
+      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
+    depends_on:
+      - web
 
 volumes:
   postgres_data:
