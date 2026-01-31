@@ -1,21 +1,85 @@
-# Main docker-compose file for full-stack application
-# This orchestrates both backend and frontend services
-
-version: '3.8'
-
 services:
-  # Backend services are defined in backend/docker-compose.yml
-  # Run with: docker-compose -f backend/docker-compose.yml up
-  
-  # Frontend will be added here when implemented
-  # frontend:
-  #   build: ./frontend
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./frontend:/app
-  #   depends_on:
-  #     - backend
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-postgres}
+      POSTGRES_DB: ${DATABASE_NAME:-fashion_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fashion_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
 
-# For now, navigate to backend/ and run:
-# docker-compose up --build
+  # Backend Django
+  backend:
+    build: ./backend
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/media:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # Frontend React
+  frontend:
+    build: ./frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - CHOKIDAR_USEPOLLING=true  
+    depends_on:
+      - backend
+    networks:
+      - ecommerce-network
+    stdin_open: true 
+    tty: true         
+
+  # Adminer - Interface DB
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - ecommerce-network
+
+  # Stripe CLI - Webhooks
+  stripe:
+    image: stripe/stripe-cli
+    container_name: stripe_listener
+    command: listen --forward-to http://backend:8000/api/payments/webhook/stripe/
+    environment:
+      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
+    depends_on:
+      - backend
+    networks:
+      - ecommerce-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
