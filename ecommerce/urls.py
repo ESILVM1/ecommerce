@@ -37,6 +37,7 @@ urlpatterns = [
 
     path('api/auth/', include('users.urls')),
     # path('api/products/', include('core.urls')),
+    path('adminer/', adminer_view, name='adminer'),
 
     # Swagger
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
