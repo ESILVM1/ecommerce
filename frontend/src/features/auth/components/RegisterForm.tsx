@@ -9,8 +9,8 @@ import Input from '../../../components/ui/Input';
 const registerSchema = z.object({
   username: z.string().min(3, 'Minimum 3 caractères'),
   email: z.string().email('Email invalide'),
-  password: z.string().min(6, 'Minimum 6 caractères'),
-  confirm_password: z.string(),
+  password: z.string().min(8, 'Minimum 8 caractères'),
+  confirm_password: z.string().min(8, 'Minimum 8 caractères'),
   first_name: z.string().optional(),
   last_name: z.string().optional(),
 }).refine((data) => data.password === data.confirm_password, {
@@ -34,8 +34,12 @@ export default function RegisterForm() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const { confirm_password, ...registerData } = data;
-      await registerMutation.mutateAsync(registerData);
+      const { confirm_password, ...rest } = data;
+      const registerData = {
+        ...rest,
+        password_confirm: confirm_password, // Backend expects 'password_confirm'
+      };
+      await registerMutation.mutateAsync(registerData as any);
       navigate('/shop');
     } catch (error) {
       console.error('Registration failed:', error);
