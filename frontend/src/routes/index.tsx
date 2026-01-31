@@ -10,6 +10,12 @@ import ProfilePage from '../features/auth/pages/ProfilePage';
 import SettingsPage from '../features/auth/pages/SettingsPage';
 import ShopPage from '../features/shop/pages/ShopPage';
 import ProductPage from '../features/shop/pages/ProductPage';
+import CartPage from '../features/cart/pages/CartPage';
+import CheckoutPage from '../features/orders/pages/CheckoutPage';
+import OrdersPage from '../features/orders/pages/OrdersPage';
+import OrderDetailPage from '../features/orders/pages/OrderDetailPage';
+import PaymentPage from '../features/payments/pages/PaymentPage';
+import PaymentSuccessPage from '../features/payments/pages/PaymentSuccessPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +41,50 @@ export const router = createBrowserRouter([
       {
         path: 'shop/:id',
         element: <ProductPage />,
+      },
+      {
+        path: 'cart',
+        element: <CartPage />,
+      },
+      {
+        path: 'checkout',
+        element: (
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'orders',
+        element: (
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'orders/:id',
+        element: (
+          <ProtectedRoute>
+            <OrderDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'payment',
+        element: (
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'payment/success',
+        element: (
+          <ProtectedRoute>
+            <PaymentSuccessPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'profile',
