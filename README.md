@@ -33,7 +33,7 @@ ecommerce/
 ## 🚀 Technologies
 
 ### Backend
-- **Django 6.0** - Framework web Python
+- **Django 6.0.1** - Framework web Python
 - **Django REST Framework** - API REST
 - **PostgreSQL 16** - Base de données
 - **Stripe** - Paiements en ligne
@@ -57,7 +57,7 @@ ecommerce/
 
 - Docker & Docker Compose
 - Node.js 20+ (pour développement frontend local)
-- Python 3.11+ (pour développement backend local)
+- Python 3.12+ (pour développement backend local)
 
 ### Avec Docker (Recommandé)
 
