@@ -58,7 +58,8 @@ class Order(models.Model):
     
     def calculate_final_amount(self):
         """Calculate final amount: total - discount + tax"""
-        self.final_amount = self.total_amount - self.discount_amount + self.tax_amount
+        from decimal import Decimal
+        self.final_amount = Decimal(str(self.total_amount)) - Decimal(str(self.discount_amount)) + Decimal(str(self.tax_amount))
         return self.final_amount
 
 
