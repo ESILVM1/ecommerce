@@ -18,7 +18,6 @@ from .serializers import (
     StripeWebhookEventSerializer
 )
 from .services import StripePaymentService, StripeWebhookService
-from core.permissions import IsOwnerOrReadOnly
 
 
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
