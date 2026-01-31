@@ -39,6 +39,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),
     # path('api/products/', include('core.urls')),
     path('adminer/', RedirectView.as_view(url='http://127.0.0.1:8080')),
+    path('api/shop/', include('shop.urls')),
 
     # Swagger
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
