@@ -1,54 +1,21 @@
+# Main docker-compose file for full-stack application
+# This orchestrates both backend and frontend services
+
+version: '3.8'
+
 services:
-  db:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # Backend services are defined in backend/docker-compose.yml
+  # Run with: docker-compose -f backend/docker-compose.yml up
+  
+  # Frontend will be added here when implemented
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #   depends_on:
+  #     - backend
 
-  web:
-    build: .
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - .:/app
-      - ./media:/app/media
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-  stripe:
-    image: stripe/stripe-cli
-    container_name: stripe_listener
-    # "web" est le nom de ton service Django. 
-    # Docker permet aux conteneurs de se parler via leur nom.
-    command: listen --forward-to http://web:8000/payment/webhook/
-    environment:
-      # Il a besoin de ta clé secrète pour s'authentifier
-      - STRIPE_API_KEY=${STRIPE_SECRET_KEY}
-    depends_on:
-      - web
-
-volumes:
-  postgres_data:
-
+# For now, navigate to backend/ and run:
+# docker-compose up --build
