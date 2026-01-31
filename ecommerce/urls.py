@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.views.generic import RedirectView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -37,7 +38,7 @@ urlpatterns = [
 
     path('api/auth/', include('users.urls')),
     # path('api/products/', include('core.urls')),
-    path('adminer/', adminer_view, name='adminer'),
+    path('adminer/', RedirectView.as_view(url='http://127.0.0.1:8080')),
 
     # Swagger
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
