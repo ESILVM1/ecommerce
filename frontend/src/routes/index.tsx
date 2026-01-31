@@ -11,6 +11,7 @@ import SettingsPage from '../features/auth/pages/SettingsPage';
 import ShopPage from '../features/shop/pages/ShopPage';
 import ProductPage from '../features/shop/pages/ProductPage';
 import CartPage from '../features/cart/pages/CartPage';
+import PaymentPage from '../features/payments/pages/PaymentPage';
 import PaymentSuccessPage from '../features/payments/pages/PaymentSuccessPage';
 
 export const router = createBrowserRouter([
@@ -41,6 +42,14 @@ export const router = createBrowserRouter([
       {
         path: 'cart',
         element: <CartPage />,
+      },
+      {
+        path: 'payment',
+        element: (
+          <ProtectedRoute>
+            <PaymentPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'payment/success',
