@@ -1,8 +1,16 @@
-from django.urls import path
-from . import views  # Import de tes vues
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
 
-# La variable DOIT s'appeler urlpatterns et DOIT être une liste []
+# Create router for ViewSets
+router = DefaultRouter()
+router.register(r'payments', views.PaymentViewSet, basename='payment')
+router.register(r'refunds', views.RefundViewSet, basename='refund')
+
 urlpatterns = [
-    # Exemple de route :
-    # path('produits/', views.product_list, name='product-list'),
+    # ViewSet routes
+    path('', include(router.urls)),
+    
+    # Stripe webhook endpoint
+    path('webhook/stripe/', views.StripeWebhookView.as_view(), name='stripe-webhook'),
 ]
