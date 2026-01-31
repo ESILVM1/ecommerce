@@ -65,7 +65,7 @@ export default function ProductPage() {
         <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
           {product.image ? (
             <img
-              src={`http://localhost:8000${product.image}`}
+              src={product.image}
               alt={product.product_display_name}
               className="w-full h-full object-cover"
             />
