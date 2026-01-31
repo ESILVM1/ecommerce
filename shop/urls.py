@@ -1,8 +1,10 @@
-from django.urls import path
-from . import views  # Import de tes vues
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ProductViewSet 
 
-# La variable DOIT s'appeler urlpatterns et DOIT être une liste []
+router = DefaultRouter()
+router.register(r'products', ProductViewSet)
+
 urlpatterns = [
-    # Exemple de route :
-    # path('produits/', views.product_list, name='product-list'),
+    path('', include(router.urls)),
 ]

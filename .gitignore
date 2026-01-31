@@ -26,8 +26,6 @@ wheels/
 # Django
 *.log
 db.sqlite3
-/media/images/
-media/images/
 
 # Environment variables
 .env
@@ -45,8 +43,9 @@ media/images/
 .DS_Store
 Thumbs.db
 
-# Media files (keep the directory but ignore large image files)
-/media/*.jpg
-/media/*.jpeg
-/media/*.png
-/media/*.gif
+# Media files - Ignore all uploaded images and files
+/media/
+!media/.gitkeep   
+*.csv
+/data/
+/uploads/
