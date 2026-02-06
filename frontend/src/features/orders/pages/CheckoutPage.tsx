@@ -4,12 +4,11 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../cart/store/cartStore';
 import { useCreateOrder } from '../hooks/useOrders';
-import CartItem from '../../cart/components/CartItem';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { formatPrice } from '../../../lib/utils';
-import { ArrowRight, CreditCard } from 'lucide-react';
+import { ArrowRight, CreditCard, Package } from 'lucide-react';
 
 const checkoutSchema = z.object({
   shipping_address: z.string().min(5, 'Adresse requise'),
@@ -48,8 +47,12 @@ export default function CheckoutPage() {
       };
 
       const order = await createOrderMutation.mutateAsync(orderData);
+      
+      // Redirect to payment with order info
+      navigate(`/payment?order_id=${order.id}&order_number=${order.order_number}`);
+      
+      // Clear cart after successful order
       clearCart();
-      navigate(`/payment?order_id=${order.id}`);
     } catch (error) {
       console.error('Order creation failed:', error);
     }
@@ -75,7 +78,7 @@ export default function CheckoutPage() {
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <Input
-                    label="Adresse"
+                    label="Adresse complète"
                     {...register('shipping_address')}
                     error={errors.shipping_address?.message}
                     placeholder="123 Rue Example"
@@ -103,19 +106,12 @@ export default function CheckoutPage() {
                   />
 
                   {createOrderMutation.isError && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">
-                        Erreur lors de la création de la commande
-                      </p>
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+                      Erreur lors de la création de la commande
                     </div>
                   )}
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    isLoading={createOrderMutation.isPending}
-                  >
+                  <Button type="submit" className="w-full" size="lg" isLoading={createOrderMutation.isPending}>
                     <CreditCard className="mr-2 h-5 w-5" />
                     Continuer vers le paiement
                   </Button>
@@ -123,15 +119,32 @@ export default function CheckoutPage() {
               </CardContent>
             </Card>
 
-            {/* Order Items Preview */}
+            {/* Cart Items Preview */}
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Articles ({items.length})</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  <CardTitle>Articles ({items.length})</CardTitle>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {items.map((item) => (
-                  <CartItem key={item.product.id} item={item} />
-                ))}
+                {items.map((item) => {
+                  const price = typeof item.product.price === 'string' ? parseFloat(item.product.price) : item.product.price;
+                  return (
+                    <div key={item.product.id} className="flex gap-3 py-2 border-b last:border-0">
+                      <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden">
+                        {item.product.image && (
+                          <img src={item.product.image} alt={item.product.product_display_name} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{item.product.product_display_name}</p>
+                        <p className="text-xs text-gray-500">Qté: {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold">{formatPrice(price * item.quantity)}</p>
+                    </div>
+                  );
+                })}
               </CardContent>
             </Card>
           </div>
@@ -139,31 +152,13 @@ export default function CheckoutPage() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle>Récapitulatif</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Récapitulatif</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Sous-total</span>
-                    <span>{formatPrice(total)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Livraison</span>
-                    <span className="text-green-600">Gratuite</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">TVA (20%)</span>
-                    <span>{formatPrice(total * 0.2)}</span>
-                  </div>
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between">
-                      <span className="font-semibold">Total</span>
-                      <span className="font-bold text-lg">
-                        {formatPrice(total * 1.2)}
-                      </span>
-                    </div>
-                  </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-600">Sous-total</span><span>{formatPrice(total)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Livraison</span><span className="text-green-600">Gratuite</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">TVA (20%)</span><span>{formatPrice(total * 0.2)}</span></div>
+                  <div className="border-t pt-2"><div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-bold text-lg">{formatPrice(total * 1.2)}</span></div></div>
                 </div>
               </CardContent>
             </Card>

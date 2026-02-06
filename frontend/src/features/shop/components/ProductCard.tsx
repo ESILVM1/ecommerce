@@ -24,7 +24,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="aspect-square bg-gray-100 relative overflow-hidden">
           {product.image ? (
             <img
-              src={`http://localhost:8000${product.image}`}
+              src={product.image}
               alt={product.product_display_name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
