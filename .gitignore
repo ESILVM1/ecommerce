@@ -1,6 +1,7 @@
-# Documentation files (internal use only)
-*.md
-!README.md
+# Documentation files - Allow all documentation
+# If you want to ignore specific .md files, add them explicitly below
+# *.md
+# !README.md
 
 # OS files
 .DS_Store

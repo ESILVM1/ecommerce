@@ -42,6 +42,12 @@ export default function Header() {
               Boutique
             </Link>
 
+            {isAuthenticated && (
+              <Link to="/orders" className="text-gray-700 hover:text-primary-600 font-medium">
+                Mes Commandes
+              </Link>
+            )}
+
             {/* Cart */}
             <Link to="/cart" className="relative">
               <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-primary-600" />
