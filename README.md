@@ -365,10 +365,6 @@ docker-compose down -v
 - [ ] Les nouvelles fonctionnalités ont des tests
 - [ ] La documentation est à jour
 
-## 📄 Licence
-
-[À définir]
-
 ## 👥 Équipe
 
 Projet développé dans le cadre du M1 Web Architecture à ESILV.
