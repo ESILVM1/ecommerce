@@ -33,7 +33,7 @@ ecommerce/
 ## 🚀 Technologies
 
 ### Backend
-- **Django 6.0** - Framework web Python
+- **Django 6.0.1** - Framework web Python
 - **Django REST Framework** - API REST
 - **PostgreSQL 16** - Base de données
 - **Stripe** - Paiements en ligne
