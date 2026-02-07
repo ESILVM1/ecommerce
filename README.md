@@ -56,10 +56,6 @@ ecommerce/
 ### Prérequis
 
 - Docker & Docker Compose
-- Node.js 20+ (pour développement frontend local)
-- Python 3.11+ (pour développement backend local)
-
-### Avec Docker (Recommandé)
 
 ```bash
 # Cloner le repository
@@ -73,49 +69,29 @@ docker-compose up -d
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8000
 # Admin Django: http://localhost:8000/admin
+# Database UI: http://localhost:8080
 ```
 
-### Sans Docker
-
-#### Backend
+### Commandes utiles
 
 ```bash
-cd backend
+# Voir les logs
+docker-compose logs -f
 
-# Créer un environnement virtuel
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# ou
-.\venv\Scripts\activate  # Windows
-
-# Installer les dépendances
-pip install -r requirements.txt
-
-# Configurer les variables d'environnement
-# Créer un fichier .env avec DATABASE_*, STRIPE_*, etc.
+# Accéder au shell Django
+docker-compose exec web python manage.py shell
 
 # Exécuter les migrations
-python manage.py migrate
+docker-compose exec web python manage.py migrate
 
 # Créer un superuser
-python manage.py createsuperuser
+docker-compose exec web python manage.py createsuperuser
 
-# Lancer le serveur
-python manage.py runserver
-```
+# Lancer les tests
+docker-compose exec web python manage.py test
 
-#### Frontend
-
-```bash
-cd frontend
-
-# Installer les dépendances
-npm install
-
-# Lancer le serveur de développement
-npm run dev
-
-# Ouvrir http://localhost:3000
+# Arrêter les services
+docker-compose down
 ```
 
 ## 🔄 CI/CD
@@ -365,13 +341,12 @@ docker-compose down -v
 - [ ] Les nouvelles fonctionnalités ont des tests
 - [ ] La documentation est à jour
 
-## 📄 Licence
-
-[À définir]
-
 ## 👥 Équipe
 
 Projet développé dans le cadre du M1 Web Architecture à ESILV.
+
+# Ahmat ROUCHAD
+# Chanez KHELIFA
 
 ---
 
