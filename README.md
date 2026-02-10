@@ -62,8 +62,10 @@ ecommerce/
 git clone https://github.com/ESILVM1/ecommerce.git
 cd ecommerce
 ```
+```bash
 # Lancer tous les services
 docker-compose up -d
+```
 
 # Accéder aux services
 # Frontend: http://localhost:3000
