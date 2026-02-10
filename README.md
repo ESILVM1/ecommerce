@@ -59,7 +59,7 @@ ecommerce/
 
 ```bash
 # Cloner le repository
-git clone <repo-url>
+git clone https://github.com/ESILVM1/ecommerce.git
 cd ecommerce
 
 # Lancer tous les services
