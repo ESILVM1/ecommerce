@@ -62,8 +62,9 @@ ecommerce/
 git clone https://github.com/ESILVM1/ecommerce.git
 cd ecommerce
 ```
-```bash
+
 # Lancer tous les services
+```bash
 docker-compose up -d
 ```
 
@@ -72,27 +73,34 @@ docker-compose up -d
 # Backend API: http://localhost:8000
 # Admin Django: http://localhost:8000/admin
 # Database UI: http://localhost:8080
-```
+# Swagger (doc) : http://localhost:8000/swagger/
+
 
 ### Commandes utiles
 
-```bash
+
 # Voir les logs
+```bash
 docker-compose logs -f
 
 # Accéder au shell Django
+```bash
 docker-compose exec web python manage.py shell
-
+```
 # Exécuter les migrations
+```bash
 docker-compose exec web python manage.py migrate
-
+```
 # Créer un superuser
+```bash
 docker-compose exec web python manage.py createsuperuser
-
+```
 # Lancer les tests
+```bash
 docker-compose exec web python manage.py test
-
+```
 # Arrêter les services
+```bash
 docker-compose down
 ```
 
