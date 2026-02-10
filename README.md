@@ -1,4 +1,4 @@
-# 🛍️ E-Commerce Platform
+#  E-Commerce Platform
 
 Application e-commerce complète avec backend Django et frontend React TypeScript.
 
@@ -118,12 +118,6 @@ Fichiers de configuration :
 - `backend/pytest.ini` - Configuration pytest
 - `backend/.flake8` - Configuration Flake8
 - `backend/pyproject.toml` - Black, isort, coverage
-
-### Badges
-
-![Backend Tests](https://github.com/VOTRE_ORG/VOTRE_REPO/workflows/Backend%20Tests/badge.svg)
-
-##  Tests
 
 ### Backend
 
