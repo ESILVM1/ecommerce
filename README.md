@@ -56,12 +56,12 @@ ecommerce/
 ### Prérequis
 
 - Docker & Docker Compose
-
-```bash
 # Cloner le repository
+```bash
+
 git clone https://github.com/ESILVM1/ecommerce.git
 cd ecommerce
-
+```
 # Lancer tous les services
 docker-compose up -d
 
