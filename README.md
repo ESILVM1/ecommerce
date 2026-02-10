@@ -2,7 +2,7 @@
 
 Application e-commerce complète avec backend Django et frontend React TypeScript.
 
-## 📋 Table des matières
+## Table des matières
 
 - [Architecture](#architecture)
 - [Technologies](#technologies)
@@ -11,7 +11,7 @@ Application e-commerce complète avec backend Django et frontend React TypeScrip
 - [Tests](#tests)
 - [Documentation](#documentation)
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ecommerce/
@@ -30,7 +30,7 @@ ecommerce/
     └── workflows/    # CI/CD GitHub Actions
 ```
 
-## 🚀 Technologies
+## Technologies
 
 ### Backend
 - **Django 6.0.1** - Framework web Python
@@ -51,7 +51,7 @@ ecommerce/
 - **GitHub Actions** - CI/CD
 - **pytest, Black, Flake8** - Quality tools
 
-## 🚀 Démarrage rapide
+## Démarrage rapide
 
 ### Prérequis
 
@@ -94,17 +94,17 @@ docker-compose exec web python manage.py test
 docker-compose down
 ```
 
-## 🔄 CI/CD
+## CI/CD
 
 Ce projet utilise **GitHub Actions** pour l'intégration continue.
 
 ### Workflows disponibles
 
 #### Backend Tests
-- ✅ Tests automatiques avec pytest
-- ✅ Vérification de la couverture de code
-- ✅ Linting (Black, isort, Flake8)
-- ✅ PostgreSQL 16 en service
+-  Tests automatiques avec pytest
+-  Vérification de la couverture de code
+-  Linting (Black, isort, Flake8)
+-  PostgreSQL 16 en service
 
 **Déclenché sur:**
 - Push vers `main` ou `develop`
@@ -123,7 +123,7 @@ Fichiers de configuration :
 
 ![Backend Tests](https://github.com/VOTRE_ORG/VOTRE_REPO/workflows/Backend%20Tests/badge.svg)
 
-## 🧪 Tests
+##  Tests
 
 ### Backend
 
@@ -158,13 +158,13 @@ flake8 .
 
 ### Apps testées
 
-- ✅ `users` - Authentification, profils, permissions
-- ✅ `shop` - Produits, filtres, recherche
-- ✅ `orders` - Commandes, workflow
-- ✅ `payments` - Stripe, webhooks
-- ✅ `core` - Fonctionnalités de base
+- `users` - Authentification, profils, permissions
+- `shop` - Produits, filtres, recherche
+- `orders` - Commandes, workflow
+- `payments` - Stripe, webhooks
+- `core` - Fonctionnalités de base
 
-## 📚 Documentation
+## Documentation
 
 ### Backend
 
@@ -194,7 +194,7 @@ backend/
     └── services.py     # Stripe integration
 ```
 
-## 🔐 Variables d'environnement
+## Variables d'environnement
 
 ### Backend (.env)
 
@@ -224,7 +224,7 @@ VITE_API_URL=http://localhost:8000/api
 VITE_STRIPE_PUBLIC_KEY=pk_test_...
 ```
 
-## 📝 Scripts utiles
+## Scripts utiles
 
 ### Backend
 
@@ -261,7 +261,7 @@ npm run preview
 npm run lint
 ```
 
-## 🐳 Docker
+## Docker
 
 ### Services
 
@@ -295,7 +295,7 @@ docker-compose down
 docker-compose down -v
 ```
 
-## 🤝 Contribution
+## Contribution
 
 ### Workflow Git
 
@@ -317,7 +317,7 @@ docker-compose down -v
 
 4. **Créer une Pull Request**
    - GitHub Actions exécutera automatiquement les tests
-   - Attendre que tous les tests passent ✅
+   - Attendre que tous les tests passent 
    - Demander une code review
 
 5. **Merger après approbation**
@@ -341,7 +341,7 @@ docker-compose down -v
 - [ ] Les nouvelles fonctionnalités ont des tests
 - [ ] La documentation est à jour
 
-## 👥 Équipe
+## Équipe
 
 Projet développé dans le cadre du M1 Web Architecture à ESILV.
 
