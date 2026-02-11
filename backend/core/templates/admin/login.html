@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Connexion à l'administration{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh; background: #f3f4f6;">
+  <div style="background: white; padding: 2rem 2.5rem; border-radius: 1rem; box-shadow: 0 2px 16px #0001; min-width: 320px;">
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+      <img src="{% static 'admin/img/logo.png' %}" alt="Logo" style="height: 48px; margin-bottom: 1rem;"/>
+      <h1 style="font-size: 1.5rem; font-weight: bold; color: #111827;">Connexion à l'administration</h1>
+      <p style="color: #6b7280;">Veuillez vous authentifier pour accéder à l'espace d'administration.</p>
+    </div>
+    <form method="post" action="" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      <div style="margin-bottom: 1rem;">
+        <label for="id_username" style="display: block; color: #374151; font-weight: 500;">Nom d'utilisateur</label>
+        {{ form.username }}
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <label for="id_password" style="display: block; color: #374151; font-weight: 500;">Mot de passe</label>
+        {{ form.password }}
+      </div>
+      <button type="submit" class="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" style="width: 100%;">Se connecter</button>
+    </form>
+    <p style="margin-top: 1rem; color: #6b7280; font-size: 0.9rem; text-align: center;">Mot de passe oublié ? Contactez l'administrateur.</p>
+  </div>
+</div>
+{% endblock %}
