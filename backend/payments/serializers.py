@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Payment, StripeWebhookEvent, Refund
+from decimal import Decimal
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -155,3 +156,45 @@ class StripeWebhookEventSerializer(serializers.ModelSerializer):
             'processed_at',
         ]
         read_only_fields = ['id', 'created_at', 'processed_at']
+
+
+class DemoPaymentSerializer(serializers.Serializer):
+    """
+    Serializer for demo payment (no actual payment processing).
+    Used for demo/testing purposes without Stripe integration.
+    """
+    order_id = serializers.IntegerField()
+    card_number = serializers.CharField(max_length=19, write_only=True)
+    card_expiry = serializers.CharField(max_length=7, write_only=True)
+    card_cvv = serializers.CharField(max_length=4, write_only=True)
+    card_holder = serializers.CharField(max_length=100, write_only=True)
+    
+    def validate_order_id(self, value):
+        """Validate that the order exists and belongs to the requesting user."""
+        from orders.models import Order
+        try:
+            order = Order.objects.get(id=value)
+        except Order.DoesNotExist:
+            raise serializers.ValidationError("Order not found.")
+        return value
+    
+    def validate_card_number(self, value):
+        """Basic validation for card number format."""
+        # Remove spaces
+        card_number = value.replace(' ', '')
+        if not card_number.isdigit() or len(card_number) < 13 or len(card_number) > 19:
+            raise serializers.ValidationError("Invalid card number format.")
+        return value
+    
+    def validate_card_expiry(self, value):
+        """Validate card expiry format (MM/YY)."""
+        import re
+        if not re.match(r'^\d{2}/\d{2}$', value):
+            raise serializers.ValidationError("Invalid expiry format. Use MM/YY.")
+        return value
+    
+    def validate_card_cvv(self, value):
+        """Validate CVV format."""
+        if not value.isdigit() or len(value) < 3 or len(value) > 4:
+            raise serializers.ValidationError("Invalid CVV format.")
+        return value

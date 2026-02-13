@@ -16,7 +16,8 @@ from .serializers import (
     CreatePaymentIntentSerializer,
     RefundSerializer,
     CreateRefundSerializer,
-    StripeWebhookEventSerializer
+    StripeWebhookEventSerializer,
+    DemoPaymentSerializer
 )
 from .services import StripePaymentService, StripeWebhookService
 
@@ -103,6 +104,73 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    @action(detail=False, methods=['post'])
+    def demo_payment(self, request):
+        """
+        Process a demo payment without actual payment processing.
+        This is for demo/testing purposes only.
+        
+        Request body:
+        {
+            "order_id": 1,
+            "card_number": "4242424242424242",
+            "card_expiry": "12/25",
+            "card_cvv": "123",
+            "card_holder": "John Doe"
+        }
+        """
+        from orders.models import Order
+        from django.utils import timezone
+        
+        serializer = DemoPaymentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        try:
+            # Get the order
+            order = Order.objects.get(
+                id=serializer.validated_data['order_id'],
+                user=request.user
+            )
+            
+            # Check if payment already exists
+            if Payment.objects.filter(order=order).exists():
+                return Response(
+                    {'error': 'Payment already exists for this order'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create demo payment record
+            payment = Payment.objects.create(
+                order=order,
+                user=request.user,
+                amount=order.final_amount,
+                currency='eur',
+                status='succeeded',
+                payment_method='card',
+                description=f'Demo payment for order {order.order_number}',
+                stripe_payment_intent_id=f'demo_pi_{order.id}_{timezone.now().timestamp()}',
+                paid_at=timezone.now()
+            )
+            
+            # Update order status
+            order.status = 'confirmed'
+            order.payment_status = 'paid'
+            order.save()
+            
+            response_serializer = PaymentSerializer(payment)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Order.DoesNotExist:
+            return Response(
+                {'error': 'Order not found or does not belong to you'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 

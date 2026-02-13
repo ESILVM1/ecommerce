@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 import uuid
+import logging
 
 from .models import Order, OrderItem
 from .serializers import (
@@ -13,6 +14,8 @@ from .serializers import (
     OrderItemSerializer
 )
 from shop.models import Product
+
+logger = logging.getLogger('orders')
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -25,8 +28,17 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        """Return only orders belonging to the current user"""
-        return Order.objects.filter(user=self.request.user)
+        """
+        Return only orders belonging to the current user.
+        Optimized with select_related for user and prefetch_related for items.
+        """
+        return Order.objects.filter(
+            user=self.request.user
+        ).select_related(
+            'user'
+        ).prefetch_related(
+            'items__product'
+        )
     
     def get_serializer_class(self):
         """Use appropriate serializer based on action"""
@@ -39,11 +51,34 @@ class OrderViewSet(viewsets.ModelViewSet):
         return OrderSerializer
     
     def create(self, request, *args, **kwargs):
-        """Create a new order from cart items"""
+        """
+        Create a new order from cart items.
+        Optimized to fetch all products at once to avoid N+1 queries.
+        """
+        logger.info(f"Order creation initiated by user {request.user.id} ({request.user.email})")
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
         try:
+            # Fetch all products at once to avoid N+1 queries
+            product_ids = [item['product_id'] for item in serializer.validated_data['items']]
+            products = {
+                p.id: p for p in Product.objects.filter(id__in=product_ids)
+            }
+            
+            # Verify all products exist
+            if len(products) != len(product_ids):
+                missing_ids = set(product_ids) - set(products.keys())
+                logger.warning(
+                    f"Order creation failed for user {request.user.id}: "
+                    f"Products not found: {missing_ids}"
+                )
+                return Response(
+                    {'error': f'Products not found: {missing_ids}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             # Create order
             order = Order.objects.create(
                 user=request.user,
@@ -54,34 +89,60 @@ class OrderViewSet(viewsets.ModelViewSet):
                 shipping_country=serializer.validated_data['shipping_country'],
             )
             
-            total_amount = 0
+            logger.info(f"Order {order.order_number} created with ID {order.id}")
             
-            # Create order items
+            total_amount = 0
+            order_items = []
+            
+            # Prepare order items for bulk creation
             for item_data in serializer.validated_data['items']:
-                product = Product.objects.get(id=item_data['product_id'])
+                product = products[item_data['product_id']]
                 quantity = item_data['quantity']
+                price_per_unit = product.price
+                item_total_price = quantity * price_per_unit
                 
-                order_item = OrderItem.objects.create(
+                order_item = OrderItem(
                     order=order,
                     product=product,
                     quantity=quantity,
-                    price_per_unit=product.price,
+                    price_per_unit=price_per_unit,
+                    total_price=item_total_price,  # Calculate manually
                 )
-                total_amount += order_item.total_price
+                total_amount += item_total_price
+                order_items.append(order_item)
+            
+            # Bulk create order items
+            OrderItem.objects.bulk_create(order_items)
+            logger.debug(f"Created {len(order_items)} items for order {order.order_number}")
             
             # Update order amounts
             order.total_amount = total_amount
             order.calculate_final_amount()
             order.save()
             
+            logger.info(
+                f"Order {order.order_number} completed: "
+                f"Total ${order.final_amount}, {len(order_items)} items, "
+                f"User: {request.user.email}"
+            )
+            
+            # Fetch order with related data for response
+            order = Order.objects.select_related('user').prefetch_related(
+                'items__product'
+            ).get(id=order.id)
+            
             return Response(
                 OrderSerializer(order).data,
                 status=status.HTTP_201_CREATED
             )
         
-        except Product.DoesNotExist:
+        except Exception as e:
+            logger.error(
+                f"Order creation failed for user {request.user.id}: {str(e)}",
+                exc_info=True
+            )
             return Response(
-                {'error': 'One or more products not found'},
+                {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
     
@@ -98,6 +159,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         order = self.get_object()
         
         if order.status != 'pending':
+            logger.warning(
+                f"Cancel order failed: Order {order.order_number} "
+                f"has status {order.status}, cannot cancel"
+            )
             return Response(
                 {'error': 'Only pending orders can be cancelled'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -105,6 +170,10 @@ class OrderViewSet(viewsets.ModelViewSet):
         
         order.status = 'cancelled'
         order.save()
+        
+        logger.info(
+            f"Order {order.order_number} cancelled by user {request.user.email}"
+        )
         
         return Response(
             {'message': 'Order cancelled successfully', 'order': OrderSerializer(order).data},
@@ -161,5 +230,14 @@ class OrderItemViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        """Return order items only from user's orders"""
-        return OrderItem.objects.filter(order__user=self.request.user)
+        """
+        Return order items only from user's orders.
+        Optimized with select_related for order and product.
+        """
+        return OrderItem.objects.filter(
+            order__user=self.request.user
+        ).select_related(
+            'order',
+            'order__user',
+            'product'
+        )

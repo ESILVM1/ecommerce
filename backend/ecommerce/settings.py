@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "orders",
     "payments",
     "shop",
+    "analytics",
     
 
 ]
@@ -149,6 +150,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'PAGE_SIZE_QUERY_PARAM': 'page_size',
+    'MAX_PAGE_SIZE': 100,
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }
 
 # Stripe Configuration
@@ -192,7 +196,32 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# Cache Configuration (Redis)
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get('REDIS_URL', 'redis://redis:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_CLASS_KWARGS': {
+                'max_connections': 50,
+                'retry_on_timeout': True,
+            },
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+        },
+        'KEY_PREFIX': 'ecommerce',
+        'TIMEOUT': 300,  # Default 5 minutes
+    }
+}
+
+# Logging Configuration
+from .logging_config import LOGGING
+
 # Rate Limiting Configuration
 RATELIMIT_ENABLE = True
 RATELIMIT_USE_CACHE = 'default'
 RATELIMIT_VIEW = '100/h'  # Default rate limit
+
+# Payment Configuration
+DEMO_MODE = True  # Set to False in production to use real Stripe payments

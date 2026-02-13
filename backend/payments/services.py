@@ -2,12 +2,15 @@
 Payment services for handling Stripe integration.
 """
 import stripe
+import logging
 from django.conf import settings
 from django.utils import timezone
 from decimal import Decimal
 from typing import Dict, Optional
 from .models import Payment, Refund, StripeWebhookEvent
 from orders.models import Order
+
+logger = logging.getLogger('payments')
 
 # Configure Stripe API key
 stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
@@ -35,19 +38,30 @@ class StripePaymentService:
         Returns:
             Dict containing payment intent details and client_secret
         """
+        logger.info(
+            f"Creating payment intent for order {order_id}, "
+            f"user {user.id} ({user.email})"
+        )
+        
         try:
             # Get the order
             order = Order.objects.get(id=order_id, user=user)
             
             # Check if payment already exists
             if hasattr(order, 'payment'):
+                logger.warning(
+                    f"Payment already exists for order {order.order_number} (ID: {order_id})"
+                )
                 raise ValueError("Payment already exists for this order")
             
             # Convert amount to cents (Stripe requires integer cents)
             amount_in_cents = int(order.final_amount * 100)
             
+            logger.debug(f"Order {order.order_number}: Amount €{order.final_amount} ({amount_in_cents} cents)")
+            
             # Create or retrieve Stripe customer
             stripe_customer = StripePaymentService._get_or_create_customer(user)
+            logger.debug(f"Stripe customer ID: {stripe_customer.id}")
             
             # Create payment intent
             payment_intent = stripe.PaymentIntent.create(
@@ -65,6 +79,8 @@ class StripePaymentService:
                 }
             )
             
+            logger.info(f"Stripe payment intent created: {payment_intent.id}")
+            
             # Create Payment record
             payment = Payment.objects.create(
                 order=order,
@@ -78,6 +94,11 @@ class StripePaymentService:
                 description=f"Payment for Order #{order.order_number}"
             )
             
+            logger.info(
+                f"Payment record created: ID {payment.id}, "
+                f"Order: {order.order_number}, Amount: €{order.final_amount}"
+            )
+            
             return {
                 'payment_id': payment.id,
                 'client_secret': payment_intent.client_secret,
@@ -88,8 +109,13 @@ class StripePaymentService:
             }
             
         except Order.DoesNotExist:
+            logger.error(f"Order {order_id} not found for user {user.id}")
             raise ValueError("Order not found or does not belong to user")
         except stripe.error.StripeError as e:
+            logger.error(
+                f"Stripe error creating payment intent for order {order_id}: {str(e)}",
+                exc_info=True
+            )
             raise ValueError(f"Stripe error: {str(e)}")
     
     @staticmethod
@@ -300,12 +326,15 @@ class StripeWebhookService:
         Returns:
             StripeWebhookEvent instance
         """
+        logger.info(f"Received Stripe webhook event: {event.type} (ID: {event.id})")
+        
         # Check if event already processed
         existing_event = StripeWebhookEvent.objects.filter(
             stripe_event_id=event.id
         ).first()
         
         if existing_event:
+            logger.warning(f"Event {event.id} already processed, skipping")
             return existing_event
         
         # Create webhook event record
@@ -318,19 +347,30 @@ class StripeWebhookService:
         try:
             # Handle different event types
             if event.type == 'payment_intent.succeeded':
+                logger.info(f"Processing payment_intent.succeeded for {event.data.object.id}")
                 StripeWebhookService._handle_payment_succeeded(event)
             elif event.type == 'payment_intent.payment_failed':
+                logger.warning(f"Processing payment_intent.payment_failed for {event.data.object.id}")
                 StripeWebhookService._handle_payment_failed(event)
             elif event.type == 'payment_intent.canceled':
+                logger.info(f"Processing payment_intent.canceled for {event.data.object.id}")
                 StripeWebhookService._handle_payment_canceled(event)
             elif event.type == 'charge.refunded':
+                logger.info(f"Processing charge.refunded for {event.data.object.id}")
                 StripeWebhookService._handle_charge_refunded(event)
+            else:
+                logger.debug(f"Unhandled event type: {event.type}")
             
             webhook_event.processed = True
             webhook_event.processed_at = timezone.now()
+            logger.info(f"Successfully processed webhook event {event.id}")
             
         except Exception as e:
             webhook_event.processing_error = str(e)
+            logger.error(
+                f"Error processing webhook event {event.id}: {str(e)}",
+                exc_info=True
+            )
         
         webhook_event.save()
         return webhook_event
