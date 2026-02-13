@@ -1,0 +1,15 @@
+# Product Images Placeholder
+
+This directory contains product images.
+
+## Image Requirements:
+- Format: JPEG, PNG, WebP
+- Max size: 5MB
+- Recommended dimensions: 800x800px
+
+## For Development:
+Products without images will display a placeholder.
+Upload images through the admin panel at http://localhost:3000/admin/products
+
+## Production:
+Ensure this directory is properly backed up and served by your web server or CDN.

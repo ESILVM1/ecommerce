@@ -242,6 +242,18 @@ export default function ProductManagement() {
       headerCheckboxSelection: true,
       cellStyle: { fontWeight: '600', color: '#0369a1' } as any
     },
+    {
+      headerName: 'Image',
+      width: 80,
+      cellRenderer: (params: any) => {
+        if (!params.data) return '';
+        const imageUrl = params.data.image;
+        if (!imageUrl) {
+          return '<div style="width: 50px; height: 50px; background: #e5e7eb; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">📷</div>';
+        }
+        return `<img src="${imageUrl}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div style=&quot;width: 50px; height: 50px; background: #e5e7eb; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #9ca3af;&quot;>📷</div>\';" />`;
+      }
+    },
     { 
       field: 'product_display_name', 
       headerName: 'Product', 
