@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse
+from django_ratelimit.decorators import ratelimit
 from .models import Payment, Refund, StripeWebhookEvent
 from .serializers import (
     PaymentSerializer,
@@ -34,10 +35,12 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
             'order', 'user'
         )
     
+    @method_decorator(ratelimit(key='user', rate='20/h', method='POST', block=True))
     @action(detail=False, methods=['post'])
     def create_payment_intent(self, request):
         """
         Create a new Stripe Payment Intent for an order.
+        Rate limit: 20 payment intents per hour per user.
         
         Request body:
         {

@@ -6,6 +6,7 @@ export interface User {
   last_name: string;
   phone?: string;
   date_of_birth?: string;
+  is_staff?: boolean;
 }
 
 export interface UserProfile {

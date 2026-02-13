@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     "drf_yasg",
     "users",
     "core",
-    "media",
     "orders",
     "payments",
     "shop",
@@ -158,13 +157,26 @@ STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
 # CORS Configuration
-# Allow all origins in development (Docker IPs change)
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# Security: CORS_ALLOW_ALL_ORIGINS should always be False in production
+# Use environment variable to control allowed origins
+import json
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+CORS_ALLOW_ALL_ORIGINS = False
+
+# Get CORS allowed origins from environment or use default for development
+cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
+if cors_origins_env:
+    # Support both JSON array format and comma-separated format
+    try:
+        CORS_ALLOWED_ORIGINS = json.loads(cors_origins_env)
+    except json.JSONDecodeError:
+        CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
+else:
+    # Default allowed origins for development
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -179,3 +191,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Rate Limiting Configuration
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_VIEW = '100/h'  # Default rate limit
