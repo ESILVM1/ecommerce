@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/shop/', include('shop.urls')),
     path('api/orders/', include('orders.urls')),
     path('api/payments/', include('payments.urls')),
+    path('api/analytics/', include('analytics.urls')),
     # path('api/products/', include('core.urls')),
     path('adminer/', RedirectView.as_view(url='http://127.0.0.1:8080')),
 

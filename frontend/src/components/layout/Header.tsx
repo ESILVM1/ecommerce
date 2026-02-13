@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Search } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Search, BarChart3, Package } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useCartStore } from '../../features/cart/store/cartStore';
 import { useLogout } from '../../features/auth/hooks/useAuth';
@@ -42,21 +42,38 @@ export default function Header() {
               Boutique
             </Link>
 
-            {isAuthenticated && (
+            {/* Customer Links */}
+            {isAuthenticated && !user?.is_staff && (
               <Link to="/orders" className="text-gray-700 hover:text-primary-600 font-medium">
                 Mes Commandes
               </Link>
             )}
 
-            {/* Cart */}
-            <Link to="/cart" className="relative">
-              <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-primary-600" />
-              {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+            {/* Admin Links */}
+            {isAuthenticated && user?.is_staff && (
+              <>
+                <Link to="/admin/products" className="flex items-center gap-2 text-gray-700 hover:text-primary-600 font-medium">
+                  <Package className="h-5 w-5" />
+                  Gestion Produits
+                </Link>
+                <Link to="/analytics" className="flex items-center gap-2 text-gray-700 hover:text-primary-600 font-medium">
+                  <BarChart3 className="h-5 w-5" />
+                  Analytics
+                </Link>
+              </>
+            )}
+
+            {/* Cart - Hidden for admins */}
+            {!user?.is_staff && (
+              <Link to="/cart" className="relative">
+                <ShoppingCart className="h-6 w-6 text-gray-700 hover:text-primary-600" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {/* Auth */}
             {isAuthenticated ? (

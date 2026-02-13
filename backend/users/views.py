@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
+from django_ratelimit.decorators import ratelimit
+from django.utils.decorators import method_decorator
 from users.models import CustomUser, UserProfile
 from users.serializers import (
     UserSerializer,
@@ -25,9 +27,13 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    @method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True))
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
     def register(self, request):
-        """Register a new user and return authentication token"""
+        """
+        Register a new user and return authentication token.
+        Rate limit: 5 registrations per hour per IP address.
+        """
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -39,9 +45,13 @@ class UserViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
     @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
     def login(self, request):
-        """Authenticate user and return authentication token"""
+        """
+        Authenticate user and return authentication token.
+        Rate limit: 10 login attempts per hour per IP address.
+        """
         serializer = UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']

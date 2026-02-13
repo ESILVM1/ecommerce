@@ -12,6 +12,8 @@ export const shopService = {
     if (filters?.search) params.append('search', filters.search);
     if (filters?.season) params.append('season', filters.season);
     if (filters?.usage) params.append('usage', filters.usage);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.ordering) params.append('ordering', filters.ordering);
     
     const response = await api.get<ProductsResponse>(`/api/shop/products/?${params.toString()}`);
     return response.data;

@@ -25,6 +25,8 @@ export interface ProductFilters {
   max_price?: number;
   season?: string;
   usage?: string;
+  page?: number;
+  ordering?: string;
 }
 
 export interface ProductsResponse {
