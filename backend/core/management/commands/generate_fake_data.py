@@ -8,6 +8,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db import models
 
 from shop.models import Product
 from orders.models import Order, OrderItem
