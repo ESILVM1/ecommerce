@@ -106,7 +106,9 @@ export default function AnalyticsDashboardPage() {
         <Card>
           <CardContent className="p-6">
             <p className="text-sm text-gray-600 mb-1">Taux de Conversion</p>
-            <p className="text-xl font-bold">{userData?.conversion_rate.toFixed(2) || 0}%</p>
+            <p className="text-xl font-bold">
+              {userData?.conversion_rate ? Number(userData.conversion_rate).toFixed(2) : '0.00'}%
+            </p>
           </CardContent>
         </Card>
 
