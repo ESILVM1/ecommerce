@@ -19,3 +19,33 @@ export const useMyOrders = () => {
     queryFn: () => orderService.getMyOrders(),
   });
 };
+
+export const useOrder = (orderId: number) => {
+  return useQuery({
+    queryKey: ['orders', orderId],
+    queryFn: () => orderService.getOrder(orderId),
+    enabled: !!orderId,
+  });
+};
+
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (orderId: number) => orderService.cancelOrder(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+};
+
+export const useConfirmDelivery = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (orderId: number) => orderService.confirmDelivery(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+};

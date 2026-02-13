@@ -12,6 +12,8 @@ import ShopPage from '../features/shop/pages/ShopPage';
 import ProductPage from '../features/shop/pages/ProductPage';
 import CartPage from '../features/cart/pages/CartPage';
 import CheckoutPage from '../features/orders/pages/CheckoutPage';
+import OrdersPage from '../features/orders/pages/OrdersPage';
+import OrderDetailPage from '../features/orders/pages/OrderDetailPage';
 import PaymentPage from '../features/payments/pages/PaymentPage';
 import PaymentSuccessPage from '../features/payments/pages/PaymentSuccessPage';
 
@@ -19,6 +21,7 @@ import PaymentSuccessPage from '../features/payments/pages/PaymentSuccessPage';
 import Dashboard from '../features/admin/pages/Dashboard';
 import ProductManagement from '../features/admin/pages/ProductManagement';
 import AGGridAdminPage from '../features/admin/pages/AGGridAdminPage';
+import AnalyticsDashboardPage from '../features/analytics/pages/AnalyticsDashboardPage';
 
 export const router = createBrowserRouter([
   {
@@ -54,6 +57,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <CheckoutPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'orders',
+        element: (
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'orders/:id',
+        element: (
+          <ProtectedRoute>
+            <OrderDetailPage />
           </ProtectedRoute>
         ),
       },
@@ -110,6 +129,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute adminOnly>
             <AGGridAdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'analytics',
+        element: (
+          <ProtectedRoute adminOnly>
+            <AnalyticsDashboardPage />
           </ProtectedRoute>
         ),
       },

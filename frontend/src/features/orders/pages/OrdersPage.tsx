@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import { Package, Clock, Truck, CheckCircle, XCircle } from 'lucide-react';
 import { useMyOrders } from '../hooks/useOrders';
 import { Card, CardContent } from '../../../components/ui/Card';
@@ -30,6 +31,20 @@ const statusColors = {
 
 export default function OrdersPage() {
   const { data: orders, isLoading, error } = useMyOrders();
+
+  // Sort orders: paid first, then by date (most recent first)
+  const sortedOrders = useMemo(() => {
+    if (!orders) return [];
+    
+    return [...orders].sort((a, b) => {
+      // First by payment status (paid before pending)
+      if (a.payment_status === 'paid' && b.payment_status !== 'paid') return -1;
+      if (a.payment_status !== 'paid' && b.payment_status === 'paid') return 1;
+      
+      // Then by date (most recent first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [orders]);
 
   if (isLoading) {
     return (
@@ -79,49 +94,84 @@ export default function OrdersPage() {
         <h1 className="text-3xl font-bold mb-8">Mes Commandes</h1>
 
         <div className="space-y-4">
-          {orders.map((order) => (
+          {sortedOrders.map((order) => (
             <Link key={order.id} to={`/orders/${order.id}`}>
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card 
+                className="hover:shadow-lg transition-shadow border-l-4" 
+                style={{
+                  borderLeftColor: order.payment_status === 'paid' ? '#10b981' : '#f59e0b'
+                }}
+              >
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-1">
-                        Commande #{order.order_number}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Passée le {formatDate(order.created_at)}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    {/* Left: Order Info */}
+                    <div className="md:col-span-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-semibold text-lg">
+                          Commande #{order.order_number}
+                        </h3>
+                        {order.payment_status === 'paid' && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ✓ Payé
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {formatDate(order.created_at)}
                       </p>
+                      
+                      {/* Product Preview */}
+                      {order.items && order.items.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {order.items.slice(0, 3).map((item) => (
+                            <div key={item.id} className="relative">
+                              <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                                {item.product_image ? (
+                                  <img 
+                                    src={item.product_image} 
+                                    alt={item.product_name || 'Produit'}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Package className="w-full h-full p-2 text-gray-400" />
+                                )}
+                              </div>
+                              {item.quantity > 1 && (
+                                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                                  {item.quantity}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {order.items.length > 3 && (
+                            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-600 text-xs font-medium">
+                              +{order.items.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {statusIcons[order.status]}
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
-                        {statusLabels[order.status]}
+                    
+                    {/* Middle: Status */}
+                    <div className="md:col-span-3 flex items-center justify-center md:justify-start">
+                      <div className="flex items-center gap-2">
+                        {statusIcons[order.status]}
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
+                          {statusLabels[order.status]}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Right: Price & Action */}
+                    <div className="md:col-span-3 flex flex-col items-end justify-center">
+                      <span className="text-gray-600 text-sm mb-1">Total</span>
+                      <span className="font-bold text-xl text-gray-900">
+                        {formatPrice(order.final_amount)}
+                      </span>
+                      <span className="text-primary-600 font-medium text-sm mt-2 hover:text-primary-700">
+                        Voir détails →
                       </span>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6 text-sm">
-                      <div>
-                        <span className="text-gray-600">Total: </span>
-                        <span className="font-bold text-lg">
-                          {formatPrice(order.final_amount)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Paiement: </span>
-                        <span className={`font-medium ${
-                          order.payment_status === 'paid' 
-                            ? 'text-green-600' 
-                            : 'text-yellow-600'
-                        }`}>
-                          {order.payment_status === 'paid' ? 'Payé' : 'En attente'}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-primary-600 font-medium">
-                      Voir détails →
-                    </span>
                   </div>
                 </CardContent>
               </Card>

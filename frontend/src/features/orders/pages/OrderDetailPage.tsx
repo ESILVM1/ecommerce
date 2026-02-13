@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, MapPin, CreditCard, CheckCircle } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Package, MapPin, CreditCard, CheckCircle, Truck } from 'lucide-react';
 import { useOrder, useCancelOrder, useConfirmDelivery } from '../hooks/useOrders';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -117,16 +117,32 @@ export default function OrderDetailPage() {
               </CardHeader>
               <CardContent>
                 {order.items && order.items.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {order.items.map((item) => (
-                      <div key={item.id} className="flex justify-between py-3 border-b last:border-0">
-                        <div>
-                          <p className="font-medium">{item.product_name || `Produit #${item.product}`}</p>
+                      <div key={item.id} className="flex gap-4 py-3 border-b last:border-0">
+                        <div className="w-20 h-20 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                          {item.product_image ? (
+                            <img 
+                              src={item.product_image} 
+                              alt={item.product_name || 'Produit'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="w-full h-full p-4 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium mb-1">{item.product_name || `Produit #${item.product}`}</p>
                           <p className="text-sm text-gray-600">
-                            Quantité: {item.quantity} × {formatPrice(item.price_per_unit)}
+                            Quantité: {item.quantity}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Prix unitaire: {formatPrice(item.price_per_unit)}
                           </p>
                         </div>
-                        <p className="font-semibold">{formatPrice(item.total_price)}</p>
+                        <div className="text-right">
+                          <p className="font-semibold">{formatPrice(item.total_price)}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -135,6 +151,67 @@ export default function OrderDetailPage() {
                     Détails des articles non disponibles
                   </p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Shipping Tracking */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-gray-600" />
+                  <CardTitle>Suivi de livraison</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      order.status !== 'pending' ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      <CheckCircle className={`h-5 w-5 ${
+                        order.status !== 'pending' ? 'text-green-600' : 'text-gray-400'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">Commande confirmée</p>
+                      <p className="text-sm text-gray-600">
+                        {formatDate(order.created_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      order.status === 'shipped' || order.status === 'delivered' ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      <Truck className={`h-5 w-5 ${
+                        order.status === 'shipped' || order.status === 'delivered' ? 'text-green-600' : 'text-gray-400'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">Expédié</p>
+                      <p className="text-sm text-gray-600">
+                        {order.shipped_at ? formatDate(order.shipped_at) : 'En attente'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      order.status === 'delivered' ? 'bg-green-100' : 'bg-gray-100'
+                    }`}>
+                      <CheckCircle className={`h-5 w-5 ${
+                        order.status === 'delivered' ? 'text-green-600' : 'text-gray-400'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">Livré</p>
+                      <p className="text-sm text-gray-600">
+                        {order.delivered_at ? formatDate(order.delivered_at) : 'En attente'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -149,6 +226,7 @@ export default function OrderDetailPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Order Summary */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Sous-total</span>
@@ -176,15 +254,36 @@ export default function OrderDetailPage() {
                   </div>
                 </div>
 
+                {/* Payment Details */}
                 <div className="pt-4 border-t">
-                  <p className="text-sm text-gray-600 mb-1">Statut paiement</p>
-                  <p className={`font-medium ${
-                    order.payment_status === 'paid' 
-                      ? 'text-green-600' 
-                      : 'text-yellow-600'
-                  }`}>
-                    {order.payment_status === 'paid' ? 'Payé' : 'En attente'}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900 mb-2">Détails du paiement</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Statut</span>
+                      <span className={`font-medium ${
+                        order.payment_status === 'paid' 
+                          ? 'text-green-600' 
+                          : order.payment_status === 'failed'
+                          ? 'text-red-600'
+                          : 'text-yellow-600'
+                      }`}>
+                        {order.payment_status === 'paid' && 'Payé'}
+                        {order.payment_status === 'pending' && 'En attente'}
+                        {order.payment_status === 'failed' && 'Échoué'}
+                        {order.payment_status === 'refunded' && 'Remboursé'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Méthode</span>
+                      <span className="text-gray-900">Carte bancaire</span>
+                    </div>
+                    {order.payment_status === 'paid' && (
+                      <div className="flex items-center gap-1 text-sm text-green-600 mt-2">
+                        <CheckCircle className="h-4 w-4" />
+                        <span>Paiement sécurisé confirmé</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Actions */}

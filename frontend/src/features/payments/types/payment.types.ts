@@ -20,3 +20,21 @@ export interface CreatePaymentIntentResponse {
   amount: string;
   currency: string;
 }
+
+export interface DemoPaymentRequest {
+  order_id: number;
+  card_number: string;
+  card_expiry: string;
+  card_cvv: string;
+  card_holder: string;
+}
+
+export interface DemoPaymentResponse {
+  id: number;
+  order: number;
+  order_number: string;
+  amount: string;
+  currency: string;
+  status: string;
+  payment_method: string;
+}

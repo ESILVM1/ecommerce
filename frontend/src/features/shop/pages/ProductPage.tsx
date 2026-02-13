@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Heart, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Heart, ArrowLeft, Zap } from 'lucide-react';
 import { useProduct } from '../hooks/useProducts';
 import { useCartStore } from '../../cart/store/cartStore';
+import { useAuthStore } from '../../auth/store/authStore';
 import { formatPrice } from '../../../lib/utils';
 import Button from '../../../components/ui/Button';
 import { Card, CardContent } from '../../../components/ui/Card';
@@ -12,11 +13,23 @@ export default function ProductPage() {
   const navigate = useNavigate();
   const { data: product, isLoading, error } = useProduct(Number(id));
   const { addItem } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
   const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
     if (product) {
       addItem(product, quantity);
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (product) {
+      addItem(product, quantity);
+      if (isAuthenticated) {
+        navigate('/checkout');
+      } else {
+        navigate('/login?redirect=/checkout');
+      }
     }
   };
 
@@ -146,18 +159,29 @@ export default function ProductPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="space-y-3">
             <Button
-              onClick={handleAddToCart}
-              className="flex-1"
+              onClick={handleBuyNow}
+              className="w-full"
               size="lg"
             >
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              Ajouter au panier
+              <Zap className="h-5 w-5 mr-2" />
+              Acheter maintenant
             </Button>
-            <Button variant="outline" size="lg">
-              <Heart className="h-5 w-5" />
-            </Button>
+            <div className="flex gap-4">
+              <Button
+                onClick={handleAddToCart}
+                variant="outline"
+                className="flex-1"
+                size="lg"
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Ajouter au panier
+              </Button>
+              <Button variant="outline" size="lg">
+                <Heart className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

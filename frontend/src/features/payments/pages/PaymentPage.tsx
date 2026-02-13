@@ -1,85 +1,113 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useCreatePaymentIntent } from '../hooks/usePayments';
+import { useDemoPayment } from '../hooks/usePayments';
 import Button from '../../../components/ui/Button';
+import Input from '../../../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { CreditCard, Lock } from 'lucide-react';
-
-// Get Stripe key from environment or use test key
-const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_51QjrQsEYuSMpqGYtd9m7IVqLX0GKt3BQPj9VFOjCj5v6sWaIjkEwQphPCeNe3n4KrB6tPhGgLPKgN7u6TQlgwqr200gMwpwBmH';
-const stripePromise = loadStripe(STRIPE_KEY);
-
-function PaymentForm({ clientSecret, orderNumber }: { clientSecret: string; orderNumber: string }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const navigate = useNavigate();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) return;
-
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const { error: submitError } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/payment/success?order=${orderNumber}`,
-        },
-        redirect: 'if_required',
-      });
-
-      if (submitError) {
-        setError(submitError.message || 'Erreur de paiement');
-      } else {
-        navigate(`/payment/success?order=${orderNumber}`);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Erreur de paiement');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <PaymentElement />
-      {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">{error}</div>
-      )}
-      <Button type="submit" disabled={!stripe || isProcessing} className="w-full" size="lg" isLoading={isProcessing}>
-        <Lock className="mr-2 h-5 w-5" />
-        Payer maintenant
-      </Button>
-      <p className="text-xs text-gray-500 text-center">Paiement sécurisé par Stripe</p>
-    </form>
-  );
-}
 
 export default function PaymentPage() {
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('order_id');
   const orderNumber = searchParams.get('order_number') || 'N/A';
-  const createPaymentIntent = useCreatePaymentIntent();
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const demoPayment = useDemoPayment();
 
-  useEffect(() => {
-    if (orderId && !clientSecret) {
-      createPaymentIntent.mutate(
-        { order_id: Number(orderId) },
-        {
-          onSuccess: (data) => setClientSecret(data.client_secret),
-          onError: (error) => console.error('Payment intent error:', error),
-        }
-      );
+  const [formData, setFormData] = useState({
+    card_number: '',
+    card_expiry: '',
+    card_cvv: '',
+    card_holder: '',
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    const matches = v.match(/\d{4,16}/g);
+    const match = (matches && matches[0]) || '';
+    const parts = [];
+
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4));
     }
-  }, [orderId, clientSecret]);
+
+    if (parts.length) {
+      return parts.join(' ');
+    } else {
+      return value;
+    }
+  };
+
+  const formatExpiry = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    if (v.length >= 2) {
+      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    }
+    return v;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+
+    if (name === 'card_number') {
+      formattedValue = formatCardNumber(value);
+    } else if (name === 'card_expiry') {
+      formattedValue = formatExpiry(value);
+    } else if (name === 'card_cvv') {
+      formattedValue = value.replace(/[^0-9]/gi, '').substring(0, 4);
+    }
+
+    setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.card_holder.trim()) {
+      newErrors.card_holder = 'Le nom du titulaire est requis';
+    }
+
+    const cardNumber = formData.card_number.replace(/\s/g, '');
+    if (!cardNumber || cardNumber.length < 13 || cardNumber.length > 19) {
+      newErrors.card_number = 'Numéro de carte invalide';
+    }
+
+    if (!/^\d{2}\/\d{2}$/.test(formData.card_expiry)) {
+      newErrors.card_expiry = 'Format invalide (MM/YY)';
+    }
+
+    if (!formData.card_cvv || formData.card_cvv.length < 3) {
+      newErrors.card_cvv = 'CVV invalide';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm() || !orderId) return;
+
+    try {
+      await demoPayment.mutateAsync({
+        order_id: Number(orderId),
+        card_number: formData.card_number,
+        card_expiry: formData.card_expiry,
+        card_cvv: formData.card_cvv,
+        card_holder: formData.card_holder,
+      });
+
+      navigate(`/payment/success?order=${orderNumber}`);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Erreur lors du paiement';
+      setErrors({ general: errorMessage });
+    }
+  };
 
   if (!orderId) {
     return (
@@ -103,21 +131,98 @@ export default function PaymentPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {clientSecret ? (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <PaymentForm clientSecret={clientSecret} orderNumber={orderNumber} />
-              </Elements>
-            ) : (
-              <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="card_holder" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nom du titulaire
+                </label>
+                <Input
+                  id="card_holder"
+                  name="card_holder"
+                  type="text"
+                  value={formData.card_holder}
+                  onChange={handleInputChange}
+                  placeholder="John Doe"
+                  error={errors.card_holder}
+                />
               </div>
-            )}
+
+              <div>
+                <label htmlFor="card_number" className="block text-sm font-medium text-gray-700 mb-2">
+                  Numéro de carte
+                </label>
+                <Input
+                  id="card_number"
+                  name="card_number"
+                  type="text"
+                  value={formData.card_number}
+                  onChange={handleInputChange}
+                  placeholder="4242 4242 4242 4242"
+                  maxLength={19}
+                  error={errors.card_number}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="card_expiry" className="block text-sm font-medium text-gray-700 mb-2">
+                    Date d'expiration
+                  </label>
+                  <Input
+                    id="card_expiry"
+                    name="card_expiry"
+                    type="text"
+                    value={formData.card_expiry}
+                    onChange={handleInputChange}
+                    placeholder="MM/YY"
+                    maxLength={5}
+                    error={errors.card_expiry}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="card_cvv" className="block text-sm font-medium text-gray-700 mb-2">
+                    CVV
+                  </label>
+                  <Input
+                    id="card_cvv"
+                    name="card_cvv"
+                    type="text"
+                    value={formData.card_cvv}
+                    onChange={handleInputChange}
+                    placeholder="123"
+                    maxLength={4}
+                    error={errors.card_cvv}
+                  />
+                </div>
+              </div>
+
+              {errors.general && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+                  {errors.general}
+                </div>
+              )}
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                size="lg" 
+                isLoading={demoPayment.isPending}
+              >
+                <Lock className="mr-2 h-5 w-5" />
+                Payer maintenant
+              </Button>
+              
+              <p className="text-xs text-gray-500 text-center">
+                Paiement sécurisé - Mode Démo
+              </p>
+            </form>
           </CardContent>
         </Card>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          <p className="font-medium mb-1">💳 Mode Test Stripe</p>
-          <p>Utilisez: 4242 4242 4242 4242 | Exp: 12/34 | CVC: 123</p>
+          <p className="font-medium mb-1">💳 Mode Démo</p>
+          <p>Utilisez n'importe quel numéro de carte valide pour tester le paiement. Aucun paiement réel ne sera effectué.</p>
         </div>
       </div>
     </div>

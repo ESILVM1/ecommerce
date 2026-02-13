@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, LogOut, Search } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Search, BarChart3 } from 'lucide-react';
 import { useAuthStore } from '../../features/auth/store/authStore';
 import { useCartStore } from '../../features/cart/store/cartStore';
 import { useLogout } from '../../features/auth/hooks/useAuth';
@@ -45,6 +45,13 @@ export default function Header() {
             {isAuthenticated && (
               <Link to="/orders" className="text-gray-700 hover:text-primary-600 font-medium">
                 Mes Commandes
+              </Link>
+            )}
+
+            {isAuthenticated && user?.is_staff && (
+              <Link to="/analytics" className="flex items-center gap-2 text-gray-700 hover:text-primary-600 font-medium">
+                <BarChart3 className="h-5 w-5" />
+                Analytics
               </Link>
             )}
 
